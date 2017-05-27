@@ -6,4 +6,9 @@ RUN yum -y update \
  && yum -y install certbot \
  && yum clean all
 
+VOLUME /etc/letsencrypt
 
+COPY entrypoint.sh /
+RUN  chmod u+x /entrypoint.sh
+
+ENTRYPOINT ["/entrypoint.sh"]

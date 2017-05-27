@@ -2,16 +2,31 @@
 set -e
 
 if [ -z "$1" ]; then
-    local config_dir=/config
-    local data_dir=/data
-    if [ ! -d "$config_dir" ]; then
-        mkdir "$config_dir"
+    certs_dir=/certs
+    webroot=/webroot
+    if [ ! -d "$certs_dir" ]; then
+        echo "certs dir does not exist"
+        exit 1
     fi
-    if [ ! -d "$data_dir" ]; then
-        mkdir "$data_dir"
+    if [ ! -d "$webroot" ]; then
+        echo "webroot dir does not exist"
+        exit 1
     fi
-    # permissions...
-    #exec ...
+    if [ -z "$CERTBOT_DOMAINS" ]; then
+        echo "The CERTBOT_DOMAINS environment variable is not set."
+        exit 1
+    fi
+    if [ -z "$CERTBOT_EMAIL" ]; then
+        echo "The CERTBOT_EMAIL environment variable is not set."
+        CERTBOT_EMAIL=" --register-unsafely-without-email "
+    else
+        CERTBOT_EMAIL=" -m $CERTBOT_EMAIL "
+    fi
+    for DOMAIN in $CERTBOT_DOMAINS
+    do
+        exec certbot certonly --webroot -n -w "$webroot" -d "$DOMAIN" "$CERTBOT_EMAIL"
+    done
+    exec cp -rfu /etc/letsencrypt/live/* "$certs_dir"
 else
     exec "$@"
 fi
